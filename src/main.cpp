@@ -317,16 +317,6 @@ int main() {
     skyboxShader.setInt("skybox", 0);
 
 
-    PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
-    pointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
-    pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
-    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
-
-    pointLight.constant = 1.0f;
-    pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
-
     Model ourModel("resources/objects/arena.obj");
     ourModel.SetShaderTextureNamePrefix("material.");
 
@@ -388,6 +378,28 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         // bind specular map
 
+
+        // render the cube
+        // glBindVertexArray(cubeVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);*/
+
+        // render containers
+        glBindVertexArray(cubeVAO);
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            // calculate the model matrix for each object and pass it to shader before drawing
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            lightShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+
+
+
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
@@ -407,6 +419,7 @@ int main() {
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
