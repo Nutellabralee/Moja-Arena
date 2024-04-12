@@ -57,7 +57,7 @@ struct ProgramState {
     bool ImGuiEnabled = false;
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
-    glm::vec3 modelPosition = glm::vec3(0.0f);
+    glm::vec3 modelPosition = glm::vec3(0.0,0.0,-5.0);
     float modelScale = 1.0f;
     PointLight pointLight;
     ProgramState()
