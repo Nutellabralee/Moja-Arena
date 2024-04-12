@@ -154,7 +154,7 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-
+    glCullFace(GL_FRONT);
     // build and compile shaders
     // -------------------------
     Shader shader("resources/shaders/cubemaps.vs", "resources/shaders/cubemaps.fs");
