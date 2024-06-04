@@ -30,7 +30,8 @@ unsigned int loadCubemap(vector<std::string> faces);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
+bool blinn = false;
+bool blinnKeyPressed = false;
 // camera
 
 float lastX = SCR_WIDTH / 2.0f;
@@ -154,13 +155,18 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
+    glFrontFace(GL_CCW);
     // build and compile shaders
     // -------------------------
-    Shader shader("resources/shaders/cubemaps.vs", "resources/shaders/cubemaps.fs");
+    Shader shader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader lightShader("resources/shaders/light.vs", "resources/shaders/light.fs");
-
+/*
     float vertices[] = {
             // positions          // normals           // texture coords
             -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -204,14 +210,56 @@ int main() {
             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
             -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
             -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-    };
+    }; */
+    float vertices[] = {
+            // positions          // texture Coords
+            -0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
 
+            -0.5f, -0.5f,  0.5f, 0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f,  0.5f, 0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f, 0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f, 0.0f,  0.0f,  1.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f, 0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+
+            0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f, 1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
+            0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f, 0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f, 0.0f,  1.0f,  0.0f,0.0f, 1.0f
+    };
     // positions all containers
     glm::vec3 cubePositions[] = {
-            glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
+         /*   glm::vec3( 2.0f,  5.0f, -15.0f),
             glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3(-3.8f, -2.0f, -12.3f), */
             glm::vec3( 2.4f, -0.4f, -3.5f),
             glm::vec3(-1.7f,  3.0f, -7.5f),
             glm::vec3( 1.3f, -2.0f, -2.5f),
@@ -219,6 +267,15 @@ int main() {
             glm::vec3( 1.5f,  0.2f, -1.5f),
             glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+    vector<glm::vec3> windows
+            {
+                    glm::vec3(-1.5f, 0.0f, -0.48f),
+                    glm::vec3( 1.5f, 0.0f, 0.51f),
+                    glm::vec3( 0.0f, 0.0f, 0.7f),
+                    glm::vec3(-0.3f, 0.0f, -2.3f),
+                    glm::vec3( 0.5f, 0.0f, -0.6f)
+            };
+
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -289,7 +346,28 @@ int main() {
             -1.0f, -1.0f,  1.0f,
             1.0f, -1.0f,  1.0f
     };
+    float transparentVertices[] = {
+            // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
 
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
 
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -323,11 +401,12 @@ int main() {
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
-    unsigned int messiMap = loadTexture(FileSystem::getPath("resources/textures/lapulga.jpg").c_str());
-
-    // draw in wireframe
+    unsigned int messiMap = loadTexture(FileSystem::getPath("resources/textures/messithegoat.jpeg").c_str());
+    unsigned int transparentMap = loadTexture(FileSystem::getPath("resources/textures/window.jpeg").c_str());
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    lightShader.use();
+    lightShader.setInt("texture1", 0);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -340,7 +419,12 @@ int main() {
         // input
         // -----
         processInput(window);
-
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            float distance = glm::length(programState->camera.Position - windows[i]);
+            sorted[distance] = windows[i];
+        }
 
         // render
         // ------
@@ -365,6 +449,7 @@ int main() {
         glm::mat4 view = programState->camera.GetViewMatrix();
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
+        lightShader.setInt("blinn", blinn);
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
@@ -374,32 +459,42 @@ int main() {
         ourModel.Draw(lightShader);
 
         // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
         // bind specular map
 
 
         // render the cube
         // glBindVertexArray(cubeVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);*/
-
+        glCullFace(GL_FRONT);
         // render containers
         glBindVertexArray(cubeVAO);
-        for (unsigned int i = 0; i < 10; i++)
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, messiMap);
+        for (unsigned int i = 0; i < 6; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(glfwGetTime(),1.0,1.0));
             lightShader.setMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        glBindVertexArray(transparentVAO);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, transparentMap);
+
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(-5,0,0));
+            lightShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
 
-
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
@@ -416,14 +511,13 @@ int main() {
         glDepthFunc(GL_LESS); // set depth function back to default
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-
+        glEnable(GL_CULL_FACE);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-
+        std::cout << (blinn ? "Blinn-Phong" : "Phong") << std::endl;
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
     programState->SaveToFile("resources/program_state.txt");
     delete programState;
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -446,6 +540,15 @@ void processInput(GLFWwindow *window) {
         programState->camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         programState->camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !blinnKeyPressed)
+    {
+        blinn = !blinn;
+        blinnKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+    {
+        blinnKeyPressed = false;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
