@@ -400,9 +400,8 @@ int main() {
 
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
-    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
     unsigned int messiMap = loadTexture(FileSystem::getPath("resources/textures/messithegoat.jpeg").c_str());
-    unsigned int transparentMap = loadTexture(FileSystem::getPath("resources/textures/window.jpeg").c_str());
+    unsigned int transparentMap = loadTexture(FileSystem::getPath("resources/textures/window.png").c_str());
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     lightShader.use();
