@@ -163,7 +163,6 @@ int main() {
     glFrontFace(GL_CCW);
     // build and compile shaders
     // -------------------------
-    Shader shader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader lightShader("resources/shaders/light.vs", "resources/shaders/light.fs");
 /*
