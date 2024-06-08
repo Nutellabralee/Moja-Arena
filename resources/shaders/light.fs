@@ -23,6 +23,7 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform Material material;
 uniform Light light;
+uniform bool blinn;
 
 void main()
 {
@@ -39,9 +40,17 @@ void main()
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
-
-    vec3 result = ambient + diffuse + specular;
-    FragColor = vec4(result, 1.0);
+    float spec = 0.0;
+        if(blinn)
+        {
+            vec3 halfwayDir = normalize(lightDir + viewDir);
+            spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
+        }
+        else
+        {
+            vec3 reflectDir = reflect(-lightDir, norm);
+            spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
+        }
+        vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+        FragColor = vec4(ambient + diffuse + specular, 1.0);
 }
